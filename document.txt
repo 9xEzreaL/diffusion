@@ -1,0 +1,50 @@
+# Pylightning have problem?
+
+#
+    driver.py : 舊的原版        -> med_seg_diff_pytorch.py
+    driver_pl : lightning版    -> med_seg_diff_pytorch.py
+    driver_mult : np/p 版      -> diff_mult.py
+    driver_pl_mask : mask版本  -> diff_mask.py
+#
+    wo_attn.py                -> no container
+    diff_contr                -> no container with triplet loss
+
+
+tmux 11
+# STOP
+    CUDA_VISIBLE_DEVICES=3 python driver_pl_mask.py -bs 5 -ds pain --exp mask_residule-256-pl-time-1000 -dd '/media/ziyi/Dataset/OAI_pain/full' -is 256 --save_every 1
+
+# Retrained range(-1, 1)
+# STOP
+    CUDA_VISIBLE_DEVICES=3 python driver_mult.py -bs 5 -ds pain --exp multi_256 -dd '/media/ziyi/Dataset/OAI_pain/full' -is 256 --save_every 1
+
+# Train wo container
+    CUDA_VISIBLE_DEVICES=3 python driver.py -bs 5 -ds pain --exp wo-container-0318 -dd '/media/ziyi/Dataset/OAI_pain/full' -is 256 --save_every 1
+
+
+
+
+tmux 6
+# STOP
+    CUDA_VISIBLE_DEVICES=2 python driver_pl_mask.py -bs 5 -ds pain --exp mask_residule-256-pl-time-500 -dd '/media/ziyi/Dataset/OAI_pain/full' -is 256 --save_every 2 --t
+    imestep 500
+
+# call wo_attn.py
+#STOP
+    CUDA_VISIBLE_DEVICES=2 python driver.py -bs 5 -ds pain --exp norm-256-wo-attn-c2x -dd '/media/ziyi/Dataset/OAI_pain/full' -is 256 --save_every 2
+
+# call diff_contr.py use triplet loss
+# STOP
+    CUDA_VISIBLE_DEVICES=2 python driver.py -bs 3 -ds pain --exp diff_contr -dd '/media/ziyi/Dataset/OAI_pain/full' -is 256 --save_every 1
+
+
+
+
+tmux 10
+# STOP
+CUDA_VISIBLE_DEVICES=0 python driver_pl.py -bs 5 -ds pain --exp pain-256-pl-time-500 -dd '/media/ziyi/Dataset/OAI_pain/full' -is 256 --save_every 2 --timestep 500
+
+# Add l2 on pixel image level AFTER 10000 ITER
+# Line 786.787
+# stop
+CUDA_VISIBLE_DEVICES=0 python driver.py -bs 5 -ds pain --exp norm-add-pixel-l2 -dd '/media/ziyi/Dataset/OAI_pain/full' -is 256 --save_every 2
